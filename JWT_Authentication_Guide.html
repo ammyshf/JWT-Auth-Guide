@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Authentication with Spring Security — Complete Visual Guide</title>
+
+    <!-- Open Graph / LinkedIn Preview -->
+    <meta property="og:title" content="JWT Authentication with Spring Security — Complete Visual Guide">
+    <meta property="og:description" content="A comprehensive visual guide covering JWT structure, Spring Security filter chain, token generation, validation, and refresh — built for interview preparation.">
+    <meta property="og:type" content="article">
+    <meta name="author" content="Amaan">
+    <meta name="description" content="JWT Authentication with Spring Security — Complete Visual Guide for Interview Preparation. Covers JWT structure, filter chain architecture, DaoAuthenticationProvider, token generation, validation, and refresh flows.">
+
+    <style>
+        html { scroll-behavior: smooth; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-card: #1c2333;
+            --bg-card-alt: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --border: #30363d;
+            --header-color: #FF6B6B;
+            --payload-color: #4ECDC4;
+            --signature-color: #FFE66D;
+            --filter-color: #6C5CE7;
+            --provider-color: #00B894;
+            --service-color: #0984e3;
+            --utility-color: #fd79a8;
+            --success: #00FF88;
+            --error: #FF4757;
+            --warning: #FFA502;
+            --accent-blue: #58a6ff;
+            --accent-purple: #bc8cff;
+            --accent-orange: #F39C12;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .page {
+            min-height: auto;
+            padding: 60px 40px;
+            position: relative;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Section backgrounds — solid colors for clean PDF capture */
+        .page:nth-child(odd) {
+            background: var(--bg-primary);
+        }
+        .page:nth-child(even) {
+            background: #0f141b;
+        }
+
+        /* Card emphasis classes — clean borders for reliable capture */
+        .card-glow { border-width: 2px; }
+        .card-glow-red { border-width: 2px; }
+        .card-glow-green { border-width: 2px; }
+        .card-glow-purple { border-width: 2px; }
+        .card-glow-yellow { border-width: 2px; }
+
+        .page-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Navigation */
+        .nav {
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 12px 40px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            overflow-x: auto;
+        }
+
+        .nav-brand {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--accent-blue);
+            white-space: nowrap;
+            letter-spacing: -0.5px;
+        }
+
+        .nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            white-space: nowrap;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav a:hover {
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        /* Page Titles */
+        .page-number {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--filter-color), var(--accent-blue));
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .page-title {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+        }
+
+        .page-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 700px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Grid layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Flow diagrams */
+        .flow-container {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px 0;
+        }
+
+        .flow-box {
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 120px;
+            position: relative;
+        }
+
+        .flow-arrow {
+            font-size: 24px;
+            color: var(--text-muted);
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
+        /* Color classes */
+        .bg-filter { background: rgba(108, 92, 231, 0.2); border: 1px solid var(--filter-color); color: var(--filter-color); }
+        .bg-provider { background: rgba(0, 184, 148, 0.2); border: 1px solid var(--provider-color); color: var(--provider-color); }
+        .bg-service { background: rgba(9, 132, 227, 0.2); border: 1px solid var(--service-color); color: var(--service-color); }
+        .bg-utility { background: rgba(253, 121, 168, 0.2); border: 1px solid var(--utility-color); color: var(--utility-color); }
+        .bg-header { background: rgba(255, 107, 107, 0.15); border: 1px solid var(--header-color); }
+        .bg-payload { background: rgba(78, 205, 196, 0.15); border: 1px solid var(--payload-color); }
+        .bg-signature { background: rgba(255, 230, 109, 0.15); border: 1px solid var(--signature-color); }
+        .bg-success { background: rgba(0, 255, 136, 0.1); border: 1px solid var(--success); }
+        .bg-error { background: rgba(255, 71, 87, 0.1); border: 1px solid var(--error); }
+        .bg-warning { background: rgba(255, 165, 2, 0.1); border: 1px solid var(--warning); }
+
+        .text-header { color: var(--header-color); }
+        .text-payload { color: var(--payload-color); }
+        .text-signature { color: var(--signature-color); }
+        .text-filter { color: var(--filter-color); }
+        .text-provider { color: var(--provider-color); }
+        .text-service { color: var(--service-color); }
+        .text-utility { color: var(--utility-color); }
+        .text-success { color: var(--success); }
+        .text-error { color: var(--error); }
+        .text-warning { color: var(--warning); }
+        .text-accent { color: var(--accent-blue); }
+        .text-muted { color: var(--text-secondary); }
+
+        /* Code blocks */
+        .code-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 20px;
+            font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', Consolas, monospace;
+            font-size: 13px;
+            overflow-x: visible;
+            line-height: 1.7;
+            word-wrap: break-word;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Tables */
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .styled-table th {
+            background: var(--bg-secondary);
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .styled-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .styled-table tr:last-child td { border-bottom: none; }
+
+        /* Architecture diagram specific */
+        .arch-box {
+            padding: 16px 20px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .arch-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .arch-connector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 20px;
+            padding: 8px 0;
+        }
+
+        /* Dot separator */
+        .dot-separator {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 6px;
+            vertical-align: middle;
+        }
+
+        /* JWT visual token */
+        .jwt-token {
+            display: flex;
+            gap: 0;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: 16px;
+            overflow-x: auto;
+            padding: 24px 0;
+            align-items: center;
+        }
+
+        .jwt-part {
+            padding: 18px 22px;
+            border-radius: 0;
+            font-weight: 700;
+            word-break: break-all;
+            max-width: 300px;
+            letter-spacing: 0.5px;
+        }
+
+        .jwt-part:first-child { border-radius: 12px 0 0 12px; }
+        .jwt-part:last-child { border-radius: 0 12px 12px 0; }
+
+        .jwt-dot {
+            font-size: 36px;
+            font-weight: 900;
+            padding: 0 3px;
+            color: var(--text-primary);
+        }
+
+        /* Step flow vertical */
+        .step-flow {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .step-flow::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .step-item {
+            position: relative;
+            margin-bottom: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+        }
+
+        .step-item::before {
+            content: '';
+            position: absolute;
+            left: -33px;
+            top: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            border: 3px solid var(--bg-primary);
+        }
+
+        .step-item.active::before {
+            background: var(--success);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .step-item.error-step::before {
+            background: var(--error);
+        }
+
+        /* Comparison cards */
+        .vs-card {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .vs-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--text-muted);
+            padding-top: 40px;
+        }
+
+        /* Tag/chip */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        /* Highlight box */
+        .highlight-box {
+            border-left: 3px solid;
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        /* Icon circle */
+        .icon-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        /* Security layers */
+        .security-layer {
+            padding: 16px 24px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+        }
+
+        .layer-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page { padding: 40px 20px; }
+            .page-title { font-size: 28px; }
+            .hero-title { font-size: 36px !important; letter-spacing: -1.5px !important; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .vs-card { grid-template-columns: 1fr; }
+            .vs-divider { padding: 0; }
+            .tamper-grid { grid-template-columns: 1fr; }
+            .token-transform { flex-direction: column; }
+            .transform-arrow { transform: rotate(90deg); }
+            .jwt-token { flex-direction: column; align-items: stretch; }
+            .jwt-part { max-width: 100%; border-radius: 0 !important; }
+            .jwt-part:first-child { border-radius: 10px 10px 0 0 !important; }
+            .jwt-part:last-child { border-radius: 0 0 10px 10px !important; }
+            .jwt-dot { text-align: center; }
+            .flow-container { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); }
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+        }
+
+        .footer a { color: var(--accent-blue); text-decoration: none; }
+
+        /* Animations disabled for reliable PDF/screenshot capture */
+        .fade-in {
+            opacity: 1;
+        }
+
+        /* Filter routing table highlight */
+        .handles {
+            color: var(--success);
+            font-weight: 700;
+        }
+        .skips {
+            color: var(--text-muted);
+        }
+
+        .section-divider {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 40px 0;
+        }
+
+        /* Hero specific */
+        .hero-title {
+            font-size: 58px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #FF6B6B, #4ECDC4, #FFE66D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2.5px;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .component-item {
+            padding: 14px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .component-item .name {
+            font-weight: 700;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .component-item .desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Pipeline */
+        .pipeline {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            margin: 24px 0;
+            overflow-x: visible;
+            flex-wrap: wrap;
+        }
+
+        .pipeline-stage {
+            flex: 1;
+            min-width: 160px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            text-align: center;
+            position: relative;
+            background: var(--bg-card);
+        }
+
+        .pipeline-stage:first-child { border-radius: 12px 0 0 12px; }
+        .pipeline-stage:last-child { border-radius: 0 12px 12px 0; }
+
+        .pipeline-stage::after {
+            content: '>';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--text-muted);
+            z-index: 1;
+            font-weight: 900;
+        }
+
+        .pipeline-stage:last-child::after { content: ''; }
+
+        .pipeline-stage .stage-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .pipeline-stage .stage-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .pipeline-stage .stage-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Tamper detection visual */
+        .tamper-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 16px;
+        }
+        .tamper-card {
+            padding: 20px;
+            border-radius: 12px;
+            position: relative;
+        }
+        .tamper-card .tamper-icon {
+            font-size: 36px;
+            position: absolute;
+            top: 12px;
+            right: 16px;
+        }
+        .tamper-card .tamper-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        .tamper-card .tamper-step {
+            font-size: 12px;
+            margin: 6px 0;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+
+        /* Token transform box */
+        .token-transform {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 16px 0;
+        }
+        .token-state {
+            flex: 1;
+            min-width: 220px;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        .token-state .state-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .token-state .state-body {
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .transform-arrow {
+            font-size: 36px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        /* Comparison visual cards */
+        .compare-card {
+            padding: 20px;
+            border-radius: 12px;
+            position: relative;
+        }
+        .compare-card .compare-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .compare-card .compare-title {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .compare-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 13px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .compare-item:last-child { border-bottom: none; }
+        .compare-item .check { color: var(--success); font-weight: 700; flex-shrink: 0; }
+        .compare-item .cross { color: var(--error); font-weight: 700; flex-shrink: 0; }
+
+        /* ASCII art diagram blocks */
+        .diagram-block {
+            background: #0c1018;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px 28px;
+            font-family: 'Cascadia Code', 'Fira Code', 'SF Mono', 'Consolas', monospace;
+            font-size: 11.5px;
+            line-height: 1.45;
+            overflow-x: visible;
+            overflow-y: visible;
+            white-space: pre;
+            color: var(--text-primary);
+            margin: 16px 0;
+        }
+        .diagram-block .d-filter { color: var(--filter-color); }
+        .diagram-block .d-provider { color: var(--provider-color); }
+        .diagram-block .d-service { color: var(--service-color); }
+        .diagram-block .d-utility { color: var(--utility-color); }
+        .diagram-block .d-header { color: var(--header-color); }
+        .diagram-block .d-payload { color: var(--payload-color); }
+        .diagram-block .d-sig { color: var(--signature-color); }
+        .diagram-block .d-success { color: var(--success); }
+        .diagram-block .d-error { color: var(--error); }
+        .diagram-block .d-warn { color: var(--warning); }
+        .diagram-block .d-accent { color: var(--accent-blue); }
+        .diagram-block .d-muted { color: var(--text-muted); }
+        .diagram-block .d-bold { font-weight: 700; }
+
+        /* Print / PDF styles */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            html { scroll-behavior: auto; }
+            body { background: var(--bg-primary) !important; color: var(--text-primary) !important; }
+            .nav { display: none !important; }
+            .page {
+                padding: 40px 30px !important;
+                page-break-after: always;
+                border-bottom: none !important;
+            }
+            .page:last-of-type { page-break-after: auto; }
+            .card, .diagram-block, .grid-2, .grid-3, .grid-4,
+            .flow-container, .pipeline, .step-item, .token-transform,
+            .tamper-grid, .vs-card, .styled-table, .footer, .security-layer,
+            .component-grid, .highlight-box, .compare-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .diagram-block {
+                font-size: 9.5px !important;
+                line-height: 1.3 !important;
+                padding: 14px 10px !important;
+            }
+            .hero-title { font-size: 44px !important; }
+            .page-title { font-size: 32px !important; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+    <span class="nav-brand">JWT Auth Guide</span>
+    <a href="#architecture">Architecture</a>
+    <a href="#jwt-basics">JWT Basics</a>
+    <a href="#step1">Registration</a>
+    <a href="#step2">Token Generation</a>
+    <a href="#step3">Validation</a>
+    <a href="#step4">Refresh</a>
+</nav>
+
+<!-- ==================== PAGE 1: HIGH-LEVEL ARCHITECTURE ==================== -->
+<section class="page" id="architecture">
+    <div class="page-inner fade-in">
+        <div class="hero-title">JWT Authentication<br>with Spring Security</div>
+        <p class="page-subtitle">A complete visual guide to implementing stateless authentication — from user registration to token refresh. Built for interview preparation.</p>
+
+        <!-- Lifecycle Pipeline -->
+        <div class="card card-glow" style="border-color: var(--accent-blue);">
+            <div class="card-title" style="color: var(--accent-blue);">Complete Authentication Lifecycle</div>
+            <div class="pipeline">
+                <div class="pipeline-stage" style="border-color: var(--service-color);">
+                    <div class="stage-label text-service">Step 1</div>
+                    <div class="stage-name">Register</div>
+                    <div class="stage-desc">POST /api/user-register</div>
+                    <div style="margin-top:6px;"><span class="tag" style="background:rgba(9,132,227,0.2);color:var(--service-color);">One-time</span></div>
+                </div>
+                <div class="pipeline-stage" style="border-color: var(--filter-color);">
+                    <div class="stage-label text-filter">Step 2</div>
+                    <div class="stage-name">Login</div>
+                    <div class="stage-desc">POST /generate-token</div>
+                    <div style="margin-top:6px;"><span class="tag" style="background:rgba(108,92,231,0.2);color:var(--filter-color);">Get Tokens</span></div>
+                </div>
+                <div class="pipeline-stage" style="border-color: var(--provider-color);">
+                    <div class="stage-label text-provider">Step 3</div>
+                    <div class="stage-name">Use API</div>
+                    <div class="stage-desc">GET /api/* + Bearer</div>
+                    <div style="margin-top:6px;"><span class="tag" style="background:rgba(0,184,148,0.2);color:var(--provider-color);">Every Request</span></div>
+                </div>
+                <div class="pipeline-stage" style="border-color: var(--warning);">
+                    <div class="stage-label text-warning">Step 4</div>
+                    <div class="stage-name">Refresh</div>
+                    <div class="stage-desc">POST /refresh-token</div>
+                    <div style="margin-top:6px;"><span class="tag" style="background:rgba(255,165,2,0.2);color:var(--warning);">On Expiry</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Component Map -->
+        <div class="card">
+            <div class="card-title">All Components at a Glance</div>
+            <div class="component-grid">
+                <div class="component-item bg-filter">
+                    <div style="font-size:22px;">&#9783;</div>
+                    <div class="name">JWTAuthFilter</div>
+                    <div class="desc">Handles login</div>
+                </div>
+                <div class="component-item bg-filter">
+                    <div style="font-size:22px;">&#10003;</div>
+                    <div class="name">JwtValidationFilter</div>
+                    <div class="desc">Validates JWT per request</div>
+                </div>
+                <div class="component-item bg-filter">
+                    <div style="font-size:22px;">&#8635;</div>
+                    <div class="name">JWTRefreshFilter</div>
+                    <div class="desc">Issues new access token</div>
+                </div>
+                <div class="component-item" style="background:rgba(255,255,255,0.05); border:1px solid var(--border);">
+                    <div style="font-size:22px;">&#9881;</div>
+                    <div class="name">SecurityConfig</div>
+                    <div class="desc">Wires everything</div>
+                </div>
+                <div class="component-item bg-provider">
+                    <div style="font-size:22px;">&#128274;</div>
+                    <div class="name">DaoAuthProvider</div>
+                    <div class="desc">Username + Password</div>
+                </div>
+                <div class="component-item bg-provider">
+                    <div style="font-size:22px;">&#128273;</div>
+                    <div class="name">JWTAuthProvider</div>
+                    <div class="desc">JWT token validation</div>
+                </div>
+                <div class="component-item bg-service">
+                    <div style="font-size:22px;">&#128100;</div>
+                    <div class="name">UserDetailsService</div>
+                    <div class="desc">Loads user from DB</div>
+                </div>
+                <div class="component-item bg-utility">
+                    <div style="font-size:22px;">&#128272;</div>
+                    <div class="name">JWTUtil</div>
+                    <div class="desc">Generate + Validate JWT</div>
+                </div>
+            </div>
+            <div style="display:flex; gap:24px; flex-wrap:wrap; margin-top:12px; font-size:12px; color:var(--text-secondary);">
+                <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--filter-color);vertical-align:middle;margin-right:4px;"></span> Filters</span>
+                <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--provider-color);vertical-align:middle;margin-right:4px;"></span> Providers</span>
+                <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--service-color);vertical-align:middle;margin-right:4px;"></span> Services</span>
+                <span><span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--utility-color);vertical-align:middle;margin-right:4px;"></span> Utility</span>
+            </div>
+        </div>
+
+        <!-- Request Journey — Full Path Visual -->
+        <div class="card card-glow-purple" style="border-color: var(--filter-color);">
+            <div class="card-title" style="color: var(--filter-color);">Complete Request Journey — Every API Call</div>
+            <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">This is exactly what happens when a client makes any authenticated API call</p>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:0;justify-content:center;">
+                <div style="padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.1);border:1px solid var(--text-muted);text-align:center;font-size:12px;font-weight:700;">
+                    <div style="font-size:18px;">&#127760;</div>Client
+                </div>
+                <span style="color:var(--text-muted);font-size:18px;margin:0 4px;">&#10132;</span>
+                <div style="padding:10px 14px;border-radius:10px;background:rgba(255,165,2,0.15);border:1px solid rgba(255,165,2,0.4);text-align:center;font-size:12px;font-weight:700;color:var(--warning);">
+                    <div style="font-size:18px;">&#9749;</div>Tomcat
+                </div>
+                <span style="color:var(--text-muted);font-size:18px;margin:0 4px;">&#10132;</span>
+                <div style="padding:10px 14px;border-radius:10px;background:rgba(108,92,231,0.2);border:1px solid rgba(108,92,231,0.5);text-align:center;font-size:12px;font-weight:700;color:var(--filter-color);">
+                    <div style="font-size:18px;">&#9783;</div>Filter Chain<br><span style="font-size:10px;font-weight:400;color:var(--text-secondary);">3 Custom Filters</span>
+                </div>
+                <span style="color:var(--text-muted);font-size:18px;margin:0 4px;">&#10132;</span>
+                <div style="padding:10px 14px;border-radius:10px;background:rgba(88,166,255,0.15);border:1px solid rgba(88,166,255,0.4);text-align:center;font-size:12px;font-weight:700;color:var(--accent-blue);">
+                    <div style="font-size:18px;">&#9881;</div>ProviderManager<br><span style="font-size:10px;font-weight:400;color:var(--text-secondary);">Routes by token type</span>
+                </div>
+                <span style="color:var(--text-muted);font-size:18px;margin:0 4px;">&#10132;</span>
+                <div style="padding:10px 14px;border-radius:10px;background:rgba(0,184,148,0.2);border:1px solid rgba(0,184,148,0.5);text-align:center;font-size:12px;font-weight:700;color:var(--provider-color);">
+                    <div style="font-size:18px;">&#128274;</div>AuthProvider<br><span style="font-size:10px;font-weight:400;color:var(--text-secondary);">Dao or JWT</span>
+                </div>
+                <span style="color:var(--text-muted);font-size:18px;margin:0 4px;">&#10132;</span>
+                <div style="padding:10px 14px;border-radius:10px;background:rgba(9,132,227,0.2);border:1px solid rgba(9,132,227,0.5);text-align:center;font-size:12px;font-weight:700;color:var(--service-color);">
+                    <div style="font-size:18px;">&#128100;</div>UserDetails<br><span style="font-size:10px;font-weight:400;color:var(--text-secondary);">Load from DB</span>
+                </div>
+                <span style="color:var(--text-muted);font-size:18px;margin:0 4px;">&#10132;</span>
+                <div style="padding:10px 14px;border-radius:10px;background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);text-align:center;font-size:12px;font-weight:700;color:var(--success);">
+                    <div style="font-size:18px;">&#128737;</div>SecurityContext<br><span style="font-size:10px;font-weight:400;color:var(--text-secondary);">ThreadLocal</span>
+                </div>
+                <span style="color:var(--text-muted);font-size:18px;margin:0 4px;">&#10132;</span>
+                <div style="padding:10px 14px;border-radius:10px;background:rgba(253,121,168,0.15);border:1px solid rgba(253,121,168,0.4);text-align:center;font-size:12px;font-weight:700;color:var(--utility-color);">
+                    <div style="font-size:18px;">&#128187;</div>Controller<br><span style="font-size:10px;font-weight:400;color:var(--text-secondary);">Business Logic</span>
+                </div>
+                <span style="color:var(--text-muted);font-size:18px;margin:0 4px;">&#10132;</span>
+                <div style="padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.1);border:1px solid var(--text-muted);text-align:center;font-size:12px;font-weight:700;">
+                    <div style="font-size:18px;">&#128230;</div>Response
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Chain & Provider Routing side by side -->
+        <div class="grid-2">
+            <!-- Filter Chain -->
+            <div class="card">
+                <div class="card-title text-filter">Security Filter Chain</div>
+                <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">Every HTTP request passes through this chain top to bottom</p>
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:rgba(108,92,231,0.15);border:1px solid rgba(108,92,231,0.3);">
+                        <span class="layer-number" style="background:var(--filter-color);color:white;">1</span>
+                        <div>
+                            <div style="font-weight:700;font-size:13px;">JWTAuthenticationFilter</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">POST /generate-token only</div>
+                        </div>
+                    </div>
+                    <div style="text-align:center;color:var(--text-muted);font-size:16px;">&#9660;</div>
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:rgba(108,92,231,0.15);border:1px solid rgba(108,92,231,0.3);">
+                        <span class="layer-number" style="background:var(--filter-color);color:white;">2</span>
+                        <div>
+                            <div style="font-weight:700;font-size:13px;">JwtValidationFilter</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">Any request with Bearer header</div>
+                        </div>
+                    </div>
+                    <div style="text-align:center;color:var(--text-muted);font-size:16px;">&#9660;</div>
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:rgba(108,92,231,0.15);border:1px solid rgba(108,92,231,0.3);">
+                        <span class="layer-number" style="background:var(--filter-color);color:white;">3</span>
+                        <div>
+                            <div style="font-weight:700;font-size:13px;">JWTRefreshFilter</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">POST /refresh-token only</div>
+                        </div>
+                    </div>
+                    <div style="text-align:center;color:var(--text-muted);font-size:16px;">&#9660;</div>
+                    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid var(--border);">
+                        <span class="layer-number" style="background:var(--bg-secondary);color:var(--text-secondary);">4</span>
+                        <div>
+                            <div style="font-weight:700;font-size:13px;">Authorization Check</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">permitAll() or authenticated()</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Provider Routing -->
+            <div class="card">
+                <div class="card-title text-provider">Provider Routing (Strategy Pattern)</div>
+                <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">ProviderManager routes by token TYPE to the correct provider</p>
+
+                <div style="padding:14px;border-radius:8px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);margin-bottom:12px;">
+                    <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Token Type</div>
+                    <div style="font-weight:700;font-size:14px;color:var(--header-color);">UsernamePasswordAuthenticationToken</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">{ username, password }</div>
+                    <div style="text-align:center;color:var(--text-muted);margin:8px 0;">&#9660; routes to</div>
+                    <div style="padding:8px 12px;border-radius:6px;background:rgba(0,184,148,0.15);text-align:center;">
+                        <span style="font-weight:700;color:var(--provider-color);">DaoAuthenticationProvider</span>
+                        <div style="font-size:11px;color:var(--text-secondary);">BCrypt verify &bull; Used in Login (Step 2)</div>
+                    </div>
+                </div>
+
+                <div style="padding:14px;border-radius:8px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.3);">
+                    <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Token Type</div>
+                    <div style="font-weight:700;font-size:14px;color:var(--payload-color);">JwtAuthenticationToken</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">{ jwt string }</div>
+                    <div style="text-align:center;color:var(--text-muted);margin:8px 0;">&#9660; routes to</div>
+                    <div style="padding:8px 12px;border-radius:6px;background:rgba(0,184,148,0.15);text-align:center;">
+                        <span style="font-weight:700;color:var(--provider-color);">JWTAuthenticationProvider</span>
+                        <div style="font-size:11px;color:var(--text-secondary);">Signature verify &bull; Used in Validate (Step 3) & Refresh (Step 4)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Routing Table -->
+        <div class="card">
+            <div class="card-title">Which Filter Handles Which Request?</div>
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Request</th>
+                        <th>Filter 1: Auth</th>
+                        <th>Filter 2: Validate</th>
+                        <th>Filter 3: Refresh</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="tag" style="background:rgba(9,132,227,0.2);color:var(--service-color);">POST /api/user-register</span></td>
+                        <td class="skips">skip</td>
+                        <td class="skips">skip</td>
+                        <td class="skips">skip</td>
+                        <td><span class="text-success">permitAll()</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag" style="background:rgba(108,92,231,0.2);color:var(--filter-color);">POST /generate-token</span></td>
+                        <td class="handles">HANDLES &#9733;</td>
+                        <td class="skips">skip</td>
+                        <td class="skips">skip</td>
+                        <td><span class="text-success">Access + Refresh tokens</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag" style="background:rgba(0,184,148,0.2);color:var(--provider-color);">GET /api/* + Bearer</span></td>
+                        <td class="skips">skip</td>
+                        <td class="handles">HANDLES &#9733;</td>
+                        <td class="skips">skip</td>
+                        <td><span class="text-success">SecurityContext set</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="tag" style="background:rgba(255,165,2,0.2);color:var(--warning);">POST /refresh-token</span></td>
+                        <td class="skips">skip</td>
+                        <td class="skips">skip</td>
+                        <td class="handles">HANDLES &#9733;</td>
+                        <td><span class="text-success">New access token</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Detailed Architecture Diagram -->
+        <div class="card card-glow" style="border-color:var(--accent-blue);">
+            <div class="card-title" style="font-size:16px;color:var(--accent-blue);">Detailed System Architecture — All Components</div>
+            <div class="diagram-block"><span class="d-accent d-bold">                        SPRING SECURITY JWT SYSTEM</span>
+
+  <span class="d-filter d-bold">┌─────────────┐</span>  <span class="d-provider d-bold">┌─────────────┐</span>  <span class="d-service d-bold">┌─────────────┐</span>  <span class="d-utility d-bold">┌─────────────┐</span>
+  <span class="d-filter d-bold">│   FILTERS   │</span>  <span class="d-provider d-bold">│  PROVIDERS  │</span>  <span class="d-service d-bold">│   SERVICES  │</span>  <span class="d-utility d-bold">│   UTILITY   │</span>
+  <span class="d-filter d-bold">├─────────────┤</span>  <span class="d-provider d-bold">├─────────────┤</span>  <span class="d-service d-bold">├─────────────┤</span>  <span class="d-utility d-bold">├─────────────┤</span>
+  <span class="d-filter">│ JWTAuth     │</span>  <span class="d-provider">│ DaoAuth     │</span>  <span class="d-service">│ UserDetails │</span>  <span class="d-utility">│ JWTUtil     │</span>
+  <span class="d-filter">│ Filter      │</span>  <span class="d-provider">│ Provider    │</span>  <span class="d-service">│ Service     │</span>  <span class="d-utility">│             │</span>
+  <span class="d-filter">│ (login)     │</span>  <span class="d-provider">│ (user+pass) │</span>  <span class="d-service">│ (DB bridge) │</span>  <span class="d-utility">│ generate()  │</span>
+  <span class="d-filter">│             │</span>  <span class="d-provider">│             │</span>  <span class="d-service">│             │</span>  <span class="d-utility">│ validate()  │</span>
+  <span class="d-filter">│ JwtValid    │</span>  <span class="d-provider">│ JWTAuth     │</span>  <span class="d-service">│ UserAuth    │</span>  <span class="d-utility">│             │</span>
+  <span class="d-filter">│ Filter      │</span>  <span class="d-provider">│ Provider    │</span>  <span class="d-service">│ Entity      │</span>  <span class="d-utility">│ Password    │</span>
+  <span class="d-filter">│ (API calls) │</span>  <span class="d-provider">│ (JWT token) │</span>  <span class="d-service">│ Repository  │</span>  <span class="d-utility">│ Encoder     │</span>
+  <span class="d-filter">│             │</span>  <span class="d-provider">│             │</span>  <span class="d-service">│             │</span>  <span class="d-utility">│ (BCrypt)    │</span>
+  <span class="d-filter">│ JWTRefresh  │</span>  <span class="d-provider">│             │</span>  <span class="d-service">│             │</span>  <span class="d-utility">│             │</span>
+  <span class="d-filter">│ Filter      │</span>  <span class="d-provider">│             │</span>  <span class="d-service">│             │</span>  <span class="d-utility">│             │</span>
+  <span class="d-filter">│ (refresh)   │</span>  <span class="d-provider">│             │</span>  <span class="d-service">│             │</span>  <span class="d-utility">│             │</span>
+  <span class="d-filter d-bold">└─────────────┘</span>  <span class="d-provider d-bold">└─────────────┘</span>  <span class="d-service d-bold">└─────────────┘</span>  <span class="d-utility d-bold">└─────────────┘</span>
+
+  <span class="d-muted">┌─────────────────────────────────────────────────────────────────┐</span>
+  <span class="d-muted">│</span>  <span class="d-accent">SecurityConfig — Wires all components, defines filter chain</span>    <span class="d-muted">│</span>
+  <span class="d-muted">└─────────────────────────────────────────────────────────────────┘</span></div>
+        </div>
+
+        <!-- Detailed Filter Chain Diagram -->
+        <div class="card" style="border-color:var(--filter-color);">
+            <div class="card-title" style="font-size:16px;color:var(--filter-color);">Security Filter Chain — Detailed Execution Order</div>
+            <div class="diagram-block">  HTTP Request
+       │
+       ▼
+  <span class="d-filter d-bold">┌──────────────────────────────────────────────────────────────────────┐</span>
+  <span class="d-filter d-bold">│                     SECURITY FILTER CHAIN                            │</span>
+  <span class="d-filter d-bold">│</span>                                                                      <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">┌────────────────────────────────────────────────────────────────┐</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  <span class="d-filter d-bold">FILTER 1: JWTAuthenticationFilter</span>                             <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  Listens for: <span class="d-warn">POST /generate-token</span>                             <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  Purpose: <span class="d-accent">LOGIN — validate credentials, generate tokens</span>        <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  All other URLs → doFilter() → <span class="d-muted">pass through</span>                    <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">└──────────────────────────┬─────────────────────────────────────┘</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>                             │                                        <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">┌────────────────────────────────────────────────────────────────┐</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  <span class="d-filter d-bold">FILTER 2: JwtValidationFilter</span>                                 <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  Listens for: <span class="d-payload">ANY request with Authorization: Bearer header</span>    <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  Purpose: <span class="d-accent">VALIDATE — verify JWT, set SecurityContext</span>           <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  No header → doFilter() → <span class="d-muted">pass through</span>                        <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">└──────────────────────────┬─────────────────────────────────────┘</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>                             │                                        <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">┌────────────────────────────────────────────────────────────────┐</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  <span class="d-filter d-bold">FILTER 3: JWTRefreshFilter</span>                                    <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  Listens for: <span class="d-warn">POST /refresh-token</span>                              <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  Purpose: <span class="d-accent">REFRESH — validate cookie, issue new access token</span>    <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">│</span>  All other URLs → doFilter() → <span class="d-muted">pass through</span>                    <span class="d-filter">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-filter">└──────────────────────────┬─────────────────────────────────────┘</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>                             │                                        <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-muted">┌────────────────────────────────────────────────────────────────┐</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-muted">│</span>  Authorization Check (FilterSecurityInterceptor)               <span class="d-muted">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-muted">│</span>  <span class="d-success">permitAll()</span> paths → allow                                     <span class="d-muted">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-muted">│</span>  <span class="d-warn">authenticated()</span> paths → check SecurityContext                 <span class="d-muted">│</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-muted">└──────────────────────────┬─────────────────────────────────────┘</span>  <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>                             │                                        <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">└─────────────────────────────┼────────────────────────────────────────┘</span>
+                                │
+                                ▼
+                    <span class="d-accent d-bold">DispatcherServlet → @Controller</span></div>
+        </div>
+
+        <!-- Provider Routing Diagram -->
+        <div class="card" style="border-color:var(--provider-color);">
+            <div class="card-title" style="font-size:16px;color:var(--provider-color);">Provider Routing — How ProviderManager Delegates (Strategy Pattern)</div>
+            <div class="diagram-block">  <span class="d-accent d-bold">AuthenticationManager (ProviderManager)</span>
+  │
+  │  providers = [ <span class="d-provider">DaoAuthenticationProvider</span>, <span class="d-provider">JWTAuthenticationProvider</span> ]
+  │
+  │  Receives Authentication object → checks <span class="d-warn">TYPE</span> → routes to correct provider
+  │
+  │  <span class="d-header">┌─────────────────────────────────┐</span>        <span class="d-payload">┌───────────────────────────┐</span>
+  │  <span class="d-header">│ UsernamePasswordAuth Token      │</span>        <span class="d-payload">│ JwtAuthenticationToken    │</span>
+  │  <span class="d-header">│ { username="sj", password="123" │</span>        <span class="d-payload">│ { token="eyJhbG..." }     │</span>
+  │  <span class="d-header">│   authenticated=false }         │</span>        <span class="d-payload">│   authenticated=false }   │</span>
+  │  <span class="d-header">└───────────────┬─────────────────┘</span>        <span class="d-payload">└──────────┬────────────────┘</span>
+  │                  │                                      │
+  │                  ▼                                      ▼
+  │  <span class="d-provider">┌───────────────────────────────┐</span>   <span class="d-provider">┌──────────────────────────────────┐</span>
+  │  <span class="d-provider">│ <span class="d-bold">DaoAuthenticationProvider</span>     │</span>   <span class="d-provider">│ <span class="d-bold">JWTAuthenticationProvider</span>        │</span>
+  │  <span class="d-provider">│                               │</span>   <span class="d-provider">│                                  │</span>
+  │  <span class="d-provider">│</span> supports(UsernamePassword     <span class="d-provider">│</span>   <span class="d-provider">│</span> supports(JwtAuth                 <span class="d-provider">│</span>
+  │  <span class="d-provider">│</span>   AuthToken) → <span class="d-success">TRUE ✓</span>        <span class="d-provider">│</span>   <span class="d-provider">│</span>   Token) → <span class="d-success">TRUE ✓</span>               <span class="d-provider">│</span>
+  │  <span class="d-provider">│</span>                               <span class="d-provider">│</span>   <span class="d-provider">│</span>                                  <span class="d-provider">│</span>
+  │  <span class="d-provider">│</span> 1. <span class="d-service">loadUserByUsername()</span>       <span class="d-provider">│</span>   <span class="d-provider">│</span> 1. Extract token string          <span class="d-provider">│</span>
+  │  <span class="d-provider">│</span>    → DB query                 <span class="d-provider">│</span>   <span class="d-provider">│</span> 2. <span class="d-utility">validateAndExtractUsername()</span>  <span class="d-provider">│</span>
+  │  <span class="d-provider">│</span> 2. <span class="d-utility">passwordEncoder.matches()</span> <span class="d-provider">│</span>   <span class="d-provider">│</span>    → verify signature + expiry   <span class="d-provider">│</span>
+  │  <span class="d-provider">│</span>    → BCrypt verify            <span class="d-provider">│</span>   <span class="d-provider">│</span> 3. <span class="d-service">loadUserByUsername()</span>          <span class="d-provider">│</span>
+  │  <span class="d-provider">│</span> 3. Return authenticated token<span class="d-provider">│</span>   <span class="d-provider">│</span>    → DB query                    <span class="d-provider">│</span>
+  │  <span class="d-provider">│</span>                               <span class="d-provider">│</span>   <span class="d-provider">│</span> 4. Return authenticated token   <span class="d-provider">│</span>
+  │  <span class="d-provider">│</span> <span class="d-warn">USED BY: Login (Step 2)</span>      <span class="d-provider">│</span>   <span class="d-provider">│</span>                                  <span class="d-provider">│</span>
+  │  <span class="d-provider">└───────────────────────────────┘</span>   <span class="d-provider">│</span> <span class="d-warn">USED BY: Validate (Step 3)</span>      <span class="d-provider">│</span>
+  │                                      <span class="d-provider">│</span>           <span class="d-warn">Refresh (Step 4)</span>       <span class="d-provider">│</span>
+  │                                      <span class="d-provider">└──────────────────────────────────┘</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== PAGE 2: JWT FUNDAMENTALS ==================== -->
+<section class="page" id="jwt-basics">
+    <div class="page-inner fade-in">
+        <span class="page-number">Fundamentals</span>
+        <h1 class="page-title">What is JWT?</h1>
+        <p class="page-subtitle">JSON Web Token — a self-contained, signed token that carries user identity. The server stays <strong>stateless</strong>.</p>
+
+        <!-- JWT Structure — Star Visual -->
+        <div class="card card-glow" style="border-color: var(--accent-blue);">
+            <div class="card-title" style="font-size:18px;">JWT Structure — Three Parts Separated by Dots</div>
+            <div class="jwt-token">
+                <div class="jwt-part" style="background:rgba(255,107,107,0.25); color:var(--header-color); box-shadow: 0 0 15px rgba(255,107,107,0.15);">
+                    eyJhbGciOiJIUzI1NiJ9
+                </div>
+                <span class="jwt-dot">.</span>
+                <div class="jwt-part" style="background:rgba(78,205,196,0.25); color:var(--payload-color); box-shadow: 0 0 15px rgba(78,205,196,0.15);">
+                    eyJzdWIiOiJzaiIsImlhdCI6MTcwMH0
+                </div>
+                <span class="jwt-dot">.</span>
+                <div class="jwt-part" style="background:rgba(255,230,109,0.25); color:var(--signature-color); box-shadow: 0 0 15px rgba(255,230,109,0.15);">
+                    WzAYgpAW6UNTL4nJ6GhFrW
+                </div>
+            </div>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:14px;margin-top:8px;font-weight:600;">
+                <span class="text-header">&#9632; HEADER (algorithm)</span>
+                <span class="text-payload">&#9632; PAYLOAD (claims/data)</span>
+                <span class="text-signature">&#9632; SIGNATURE (verification)</span>
+            </div>
+
+            <!-- Decoded View — Side by Side -->
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+                <div style="font-size:13px;font-weight:700;color:var(--accent-blue);margin-bottom:12px;">DECODED VIEW</div>
+                <div class="grid-3">
+                    <div style="padding:14px;border-radius:10px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);">
+                        <div style="font-size:11px;color:var(--header-color);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:8px;">Header</div>
+                        <div class="code-block" style="font-size:12px;background:rgba(0,0,0,0.3);">
+{<br>
+&nbsp;&nbsp;<span class="text-header">"alg"</span>: "HS256",<br>
+&nbsp;&nbsp;<span class="text-header">"typ"</span>: "JWT"<br>
+}
+                        </div>
+                    </div>
+                    <div style="padding:14px;border-radius:10px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.3);">
+                        <div style="font-size:11px;color:var(--payload-color);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:8px;">Payload</div>
+                        <div class="code-block" style="font-size:12px;background:rgba(0,0,0,0.3);">
+{<br>
+&nbsp;&nbsp;<span class="text-payload">"sub"</span>: "sj",<br>
+&nbsp;&nbsp;<span class="text-payload">"role"</span>: "ROLE_USER",<br>
+&nbsp;&nbsp;<span class="text-payload">"iat"</span>: 1700000000,<br>
+&nbsp;&nbsp;<span class="text-payload">"exp"</span>: 1700000900<br>
+}
+                        </div>
+                    </div>
+                    <div style="padding:14px;border-radius:10px;background:rgba(255,230,109,0.1);border:1px solid rgba(255,230,109,0.3);">
+                        <div style="font-size:11px;color:var(--signature-color);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:8px;">Signature</div>
+                        <div class="code-block" style="font-size:12px;background:rgba(0,0,0,0.3);">
+HMACSHA256(<br>
+&nbsp;&nbsp;base64(<span class="text-header">header</span>) + "."<br>
+&nbsp;&nbsp;+ base64(<span class="text-payload">payload</span>),<br>
+&nbsp;&nbsp;<span class="text-signature"><strong>SECRET_KEY</strong></span><br>
+)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Three parts breakdown — detailed -->
+        <div class="grid-3">
+            <div class="card bg-header card-glow-red" style="border-color:var(--header-color);">
+                <div class="card-title text-header">Header</div>
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">Metadata about the token</p>
+                <div style="font-size:13px;">
+                    <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><strong>alg</strong> — signing algorithm (HS256)</div>
+                    <div style="padding:6px 0;"><strong>typ</strong> — token type (JWT)</div>
+                </div>
+                <p style="font-size:12px;color:var(--text-secondary);margin-top:10px;">HS256 = HMAC-SHA256 (symmetric). RS256 = RSA (asymmetric).</p>
+            </div>
+            <div class="card bg-payload" style="border-color:var(--payload-color);">
+                <div class="card-title text-payload">Payload (Claims)</div>
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">The actual data/claims</p>
+                <div style="font-size:13px;">
+                    <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><strong>sub</strong> — subject (username)</div>
+                    <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><strong>iat</strong> — issued at (timestamp)</div>
+                    <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><strong>exp</strong> — expiration (timestamp)</div>
+                    <div style="padding:6px 0;"><strong>role</strong> — custom claim</div>
+                </div>
+                <div class="highlight-box bg-error" style="border-color:var(--error);margin-top:10px;font-size:12px;">
+                    Base64 encoded, NOT encrypted! Anyone can decode and read. Never store passwords or secrets.
+                </div>
+            </div>
+            <div class="card bg-signature card-glow-yellow" style="border-color:var(--signature-color);">
+                <div class="card-title text-signature">Signature</div>
+                <p style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;">Integrity guarantee</p>
+                <div class="code-block" style="font-size:12px;">
+HMACSHA256(<br>
+&nbsp;&nbsp;base64(header) + "."<br>
+&nbsp;&nbsp;+ base64(payload),<br>
+&nbsp;&nbsp;<strong>SECRET_KEY</strong><br>
+)
+                </div>
+                <p style="font-size:12px;color:var(--text-secondary);margin-top:10px;">If payload is tampered, re-computed signature won't match. Attacker can't forge without the secret key.</p>
+            </div>
+        </div>
+
+        <!-- Tamper Detection Visual -->
+        <div class="card" style="border-color: var(--accent-blue);">
+            <div class="card-title" style="font-size:16px;color:var(--accent-blue);">Tamper Detection — Why Signatures Matter</div>
+            <p style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;">This is the #1 concept interviewers ask: "How does the server know if a JWT was modified?"</p>
+            <div class="tamper-grid">
+                <!-- Valid Token -->
+                <div class="tamper-card" style="background:rgba(0,255,136,0.08);border:2px solid rgba(0,255,136,0.3);">
+                    <div class="tamper-icon">&#9989;</div>
+                    <div class="tamper-label" style="color:var(--success);">VALID TOKEN</div>
+                    <div class="tamper-step" style="background:rgba(78,205,196,0.15);">
+                        <span class="text-payload">Payload:</span> { "sub": "sj", "role": "ROLE_USER" }
+                    </div>
+                    <div class="tamper-step" style="background:rgba(255,230,109,0.15);">
+                        <span class="text-signature">Original Sig:</span> HMAC(h.p, secret) = <strong>abc123</strong>
+                    </div>
+                    <div class="tamper-step" style="background:rgba(88,166,255,0.15);">
+                        <span class="text-accent">Server Recomputes:</span> HMAC(h.p, secret) = <strong>abc123</strong>
+                    </div>
+                    <div style="margin-top:10px;padding:10px;border-radius:8px;background:rgba(0,255,136,0.15);text-align:center;font-weight:700;color:var(--success);font-size:14px;">
+                        abc123 == abc123 &#10132; SIGNATURE MATCHES &#10003;
+                    </div>
+                </div>
+                <!-- Tampered Token -->
+                <div class="tamper-card" style="background:rgba(255,71,87,0.08);border:2px solid rgba(255,71,87,0.3);">
+                    <div class="tamper-icon">&#10060;</div>
+                    <div class="tamper-label" style="color:var(--error);">TAMPERED TOKEN</div>
+                    <div class="tamper-step" style="background:rgba(255,71,87,0.15);">
+                        <span class="text-error">Payload CHANGED:</span> { "sub": "sj", "role": "<strong>ROLE_ADMIN</strong>" }
+                    </div>
+                    <div class="tamper-step" style="background:rgba(255,230,109,0.15);">
+                        <span class="text-signature">Original Sig:</span> still <strong>abc123</strong> <span class="text-muted">(attacker can't recompute)</span>
+                    </div>
+                    <div class="tamper-step" style="background:rgba(88,166,255,0.15);">
+                        <span class="text-accent">Server Recomputes:</span> HMAC(h.p', secret) = <strong>xyz789</strong>
+                    </div>
+                    <div style="margin-top:10px;padding:10px;border-radius:8px;background:rgba(255,71,87,0.15);text-align:center;font-weight:700;color:var(--error);font-size:14px;">
+                        abc123 != xyz789 &#10132; SIGNATURE MISMATCH &#10060; REJECTED
+                    </div>
+                </div>
+            </div>
+            <div class="highlight-box bg-warning" style="border-color:var(--warning);font-size:12px;margin-top:16px;">
+                <strong>Key Insight:</strong> The attacker can decode and modify the payload (it's just Base64), but cannot regenerate the signature without the SECRET_KEY. The server always recomputes the signature from the received header+payload and compares it.
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Session vs Token — Enhanced Visual Cards -->
+        <div class="vs-card">
+            <div class="compare-card card-glow-red" style="background:rgba(255,71,87,0.08);border:2px solid rgba(255,71,87,0.3);">
+                <div class="compare-icon">&#128451;</div>
+                <div class="compare-title" style="color:var(--error);">Session-Based (Old Way)</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;padding:8px;border-radius:6px;background:rgba(255,71,87,0.1);">Server stores sessions in memory (JSESSIONID cookie)</div>
+                <div class="compare-item"><span class="cross">&#10060;</span> Server stores ALL user sessions in memory</div>
+                <div class="compare-item"><span class="cross">&#10060;</span> Horizontal scaling needs sticky sessions / Redis</div>
+                <div class="compare-item"><span class="cross">&#10060;</span> Bad for microservices (shared session store needed)</div>
+                <div class="compare-item"><span class="cross">&#10060;</span> Bad for mobile apps (cookie handling complex)</div>
+                <div class="compare-item"><span class="cross">&#10060;</span> CSRF vulnerable (cookies sent automatically)</div>
+                <div class="compare-item"><span class="cross">&#10060;</span> Server restart = all sessions lost</div>
+            </div>
+            <div class="vs-divider">VS</div>
+            <div class="compare-card card-glow-green" style="background:rgba(0,255,136,0.06);border:2px solid rgba(0,255,136,0.3);">
+                <div class="compare-icon">&#128273;</div>
+                <div class="compare-title" style="color:var(--success);">Token-Based / JWT (Modern)</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;padding:8px;border-radius:6px;background:rgba(0,255,136,0.08);">Server is completely stateless — token carries everything</div>
+                <div class="compare-item"><span class="check">&#10003;</span> Server stores NOTHING — token is self-contained</div>
+                <div class="compare-item"><span class="check">&#10003;</span> Any server can validate (just needs the secret key)</div>
+                <div class="compare-item"><span class="check">&#10003;</span> Perfect for microservices (pass token between services)</div>
+                <div class="compare-item"><span class="check">&#10003;</span> Works great with mobile (header-based auth)</div>
+                <div class="compare-item"><span class="check">&#10003;</span> Header-based = immune to CSRF attacks</div>
+                <div class="compare-item"><span class="check">&#10003;</span> Server restart = no impact on existing tokens</div>
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <!-- Access vs Refresh Token — Enhanced Visual -->
+        <div class="card card-glow" style="border-color:var(--accent-blue);">
+            <div class="card-title" style="font-size:16px;">Access Token vs Refresh Token</div>
+            <div class="grid-2" style="margin-top:12px;">
+                <div style="padding:20px;border-radius:12px;background:rgba(78,205,196,0.08);border:2px solid rgba(78,205,196,0.3);">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                        <div style="font-size:28px;">&#128196;</div>
+                        <div>
+                            <div style="font-size:16px;font-weight:800;color:var(--payload-color);">Access Token</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">The "Key Card" to access APIs</div>
+                        </div>
+                    </div>
+                    <div style="font-size:13px;">
+                        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;"><span class="text-muted">Expiry</span><strong>15 minutes</strong></div>
+                        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;"><span class="text-muted">Sent via</span><strong>Authorization Header</strong></div>
+                        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;"><span class="text-muted">Sent on</span><strong>Every API request</strong></div>
+                        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;"><span class="text-muted">If stolen</span><strong class="text-warning">15 min damage window</strong></div>
+                        <div style="padding:8px 0;display:flex;justify-content:space-between;"><span class="text-muted">Storage</span><strong>JS memory / localStorage</strong></div>
+                    </div>
+                </div>
+                <div style="padding:20px;border-radius:12px;background:rgba(255,165,2,0.08);border:2px solid rgba(255,165,2,0.3);">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                        <div style="font-size:28px;">&#128274;</div>
+                        <div>
+                            <div style="font-size:16px;font-weight:800;color:var(--warning);">Refresh Token</div>
+                            <div style="font-size:11px;color:var(--text-secondary);">The "Master Key" to get new access tokens</div>
+                        </div>
+                    </div>
+                    <div style="font-size:13px;">
+                        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;"><span class="text-muted">Expiry</span><strong>7 days</strong></div>
+                        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;"><span class="text-muted">Sent via</span><strong>HttpOnly Cookie</strong></div>
+                        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;"><span class="text-muted">Sent on</span><strong>Only /refresh-token</strong></div>
+                        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;"><span class="text-muted">If stolen</span><strong class="text-success">HttpOnly prevents JS theft</strong></div>
+                        <div style="padding:8px 0;display:flex;justify-content:space-between;"><span class="text-muted">Storage</span><strong>HttpOnly Cookie (browser)</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== PAGE 3: STEP 1 — REGISTRATION ==================== -->
+<section class="page" id="step1">
+    <div class="page-inner fade-in">
+        <span class="page-number" style="background:linear-gradient(135deg, var(--service-color), #0652DD);">Step 1</span>
+        <h1 class="page-title">User Registration</h1>
+        <p class="page-subtitle">POST /api/user-register — Create user with BCrypt-hashed password. This endpoint is <code style="color:var(--success);">permitAll()</code>.</p>
+
+        <!-- Flow -->
+        <div class="card">
+            <div class="card-title">Registration Flow</div>
+            <div class="flow-container">
+                <div class="flow-box" style="background:rgba(255,255,255,0.1);border:1px solid var(--text-muted);color:var(--text-primary);">Client<br><span style="font-size:11px;color:var(--text-secondary);">{ user, pass, role }</span></div>
+                <span class="flow-arrow">&#10132;</span>
+                <div class="flow-box bg-service">Controller<br><span style="font-size:11px;">@PostMapping</span></div>
+                <span class="flow-arrow">&#10132;</span>
+                <div class="flow-box bg-utility">PasswordEncoder<br><span style="font-size:11px;">BCrypt.encode()</span></div>
+                <span class="flow-arrow">&#10132;</span>
+                <div class="flow-box bg-service">Service<br><span style="font-size:11px;">save(entity)</span></div>
+                <span class="flow-arrow">&#10132;</span>
+                <div class="flow-box bg-provider">Repository<br><span style="font-size:11px;">JPA save()</span></div>
+                <span class="flow-arrow">&#10132;</span>
+                <div class="flow-box" style="background:rgba(255,165,2,0.2);border:1px solid var(--warning);color:var(--warning);">Database<br><span style="font-size:11px;">USER_AUTH table</span></div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- BCrypt -->
+            <div class="card">
+                <div class="card-title text-utility">BCrypt Password Hashing</div>
+                <div class="code-block">
+                    <span class="text-muted">// Input:</span> "123"<br><br>
+                    <span class="text-muted">// Output:</span><br>
+                    <span class="text-header">$2a</span><span class="text-payload">$10</span><span class="text-signature">$euzihUhyp4exMejD</span><span class="text-accent">kyDb0eK2q49s...</span><br><br>
+                    <span class="text-header">$2a</span> = algorithm (BCrypt)<br>
+                    <span class="text-payload">$10</span> = cost factor (2^10 rounds)<br>
+                    <span class="text-signature">22 chars</span> = random salt<br>
+                    <span class="text-accent">31 chars</span> = hash output
+                </div>
+                <div class="highlight-box bg-success" style="border-color:var(--success);font-size:12px;margin-top:12px;">
+                    Same password = different hash each time (random salt). Prevents rainbow table attacks.
+                </div>
+            </div>
+
+            <!-- Entity to DB -->
+            <div class="card">
+                <div class="card-title">UserAuthEntity &#10132; Database</div>
+                <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+                    <div class="code-block" style="flex:1;min-width:200px;">
+                        <span class="text-filter">@Entity</span><br>
+                        <span class="text-provider">class UserAuthEntity</span><br>
+                        &nbsp;&nbsp;<span class="text-accent">implements UserDetails</span><br><br>
+                        &nbsp;&nbsp;id: Long<br>
+                        &nbsp;&nbsp;username: String<br>
+                        &nbsp;&nbsp;password: String <span class="text-muted">(BCrypt)</span><br>
+                        &nbsp;&nbsp;role: String
+                    </div>
+                    <div style="font-size:28px;color:var(--text-muted);">&#10132;</div>
+                    <div style="flex:1;min-width:200px;">
+                        <table class="styled-table" style="font-size:12px;">
+                            <thead><tr><th>ID</th><th>PASSWORD</th><th>ROLE</th><th>USERNAME</th></tr></thead>
+                            <tbody><tr>
+                                <td>1</td>
+                                <td style="font-size:10px;word-break:break-all;">$2a$10$euzih...</td>
+                                <td>ROLE_USER</td>
+                                <td>sj</td>
+                            </tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="highlight-box bg-warning" style="border-color:var(--warning);font-size:12px;margin-top:12px;">
+                    <strong>Why implement UserDetails?</strong> Spring Security only works with UserDetails objects during authentication. Implementing it avoids a separate mapping layer.
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1 Detailed Flow Diagram -->
+        <div class="card card-glow" style="border-color:var(--service-color);">
+            <div class="card-title" style="font-size:16px;color:var(--service-color);">Complete Registration Flow — Detailed Diagram</div>
+            <div class="diagram-block">  <span class="d-accent d-bold">POST /api/user-register</span>
+  { "username": "sj", "password": "123", "role": "ROLE_USER" }
+  │
+  │  <span class="d-muted">SecurityConfig: requestMatchers("/api/user-register").permitAll()</span>
+  │  → <span class="d-success">NO authentication needed, passes through all filters</span>
+  │
+  ▼
+  <span class="d-service d-bold">┌──────────────────────────────────────────────────────────────────────┐</span>
+  <span class="d-service d-bold">│  UserAuthController                                                  │</span>
+  <span class="d-service">│</span>                                                                       <span class="d-service">│</span>
+  <span class="d-service">│</span>  @RequestBody                                                         <span class="d-service">│</span>
+  <span class="d-service">│</span>  JSON ──► UserAuthEntity { username="sj", password="123",             <span class="d-service">│</span>
+  <span class="d-service">│</span>                            role="ROLE_USER", id=null }                <span class="d-service">│</span>
+  <span class="d-service">│</span>       │                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>       ▼                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-utility d-bold">passwordEncoder.encode("123")</span>                                        <span class="d-service">│</span>
+  <span class="d-service">│</span>       │                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>       ▼                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-utility">┌──────────────────────────────────────────────────────┐</span>             <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-utility">│  <span class="d-bold">BCryptPasswordEncoder</span>                                │</span>             <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-utility">│</span>                                                       <span class="d-utility">│</span>             <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-utility">│</span>  1. Generate random salt                              <span class="d-utility">│</span>             <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-utility">│</span>  2. hash = BCrypt("123" + salt, cost=10)              <span class="d-utility">│</span>             <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-utility">│</span>  3. Return: <span class="d-header">$2a</span><span class="d-payload">$10</span><span class="d-sig">$euzihUhyp4exMejD</span><span class="d-accent">kyDb0eK2q49s...</span>  <span class="d-utility">│</span>             <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-utility">│</span>             <span class="d-header">algo</span> <span class="d-payload">cost</span>         <span class="d-sig">salt</span>           <span class="d-accent">hash</span>     <span class="d-utility">│</span>             <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-utility">└──────────────────────────────────────────────────────┘</span>             <span class="d-service">│</span>
+  <span class="d-service">│</span>       │                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>       ▼                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>  entity.setPassword("$2a$10$euzih...")                                <span class="d-service">│</span>
+  <span class="d-service">│</span>       │                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>       ▼                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-service d-bold">userAuthEntityService.save(entity)</span>                                   <span class="d-service">│</span>
+  <span class="d-service">│</span>       │                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>       ▼                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-provider">┌──────────────────────────────────────────┐</span>                         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-provider">│  UserAuthEntityRepository.save()</span>          <span class="d-provider">│</span>                         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-provider">│</span>  → Hibernate generates:                   <span class="d-provider">│</span>                         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-provider">│</span>  INSERT INTO user_auth                    <span class="d-provider">│</span>                         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-provider">│</span>  (username, password, role)               <span class="d-provider">│</span>                         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-provider">│</span>  VALUES ('sj', '$2a$10$...', 'ROLE_USER') <span class="d-provider">│</span>                         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-provider">└──────────────────────────────────────────┘</span>                         <span class="d-service">│</span>
+  <span class="d-service">│</span>       │                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>       ▼                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-warn">┌──────────────────────────────────────────────────────────┐</span>         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-warn">│  DATABASE: USER_AUTH                                      │</span>         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-warn">│  ┌────┬───────────────────────┬───────────┬────────────┐ │</span>         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-warn">│  │ ID │ PASSWORD              │ ROLE      │ USERNAME   │ │</span>         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-warn">│  ├────┼───────────────────────┼───────────┼────────────┤ │</span>         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-warn">│  │ 1  │ $2a$10$euzihUhyp4... │ ROLE_USER │ sj         │ │</span>         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-warn">│  └────┴───────────────────────┴───────────┴────────────┘ │</span>         <span class="d-service">│</span>
+  <span class="d-service">│</span>  <span class="d-warn">└──────────────────────────────────────────────────────────┘</span>         <span class="d-service">│</span>
+  <span class="d-service">│</span>       │                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>       ▼                                                               <span class="d-service">│</span>
+  <span class="d-service">│</span>  Response: <span class="d-success d-bold">200 OK</span> "User registered successfully!"                     <span class="d-service">│</span>
+  <span class="d-service d-bold">└──────────────────────────────────────────────────────────────────────┘</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== PAGE 4: STEP 2 — TOKEN GENERATION ==================== -->
+<section class="page" id="step2">
+    <div class="page-inner fade-in">
+        <span class="page-number" style="background:linear-gradient(135deg, var(--filter-color), #a55eea);">Step 2</span>
+        <h1 class="page-title">Login & Token Generation</h1>
+        <p class="page-subtitle">POST /generate-token — Validate credentials via DaoAuthenticationProvider, then generate Access + Refresh tokens.</p>
+
+        <!-- Main Flow -->
+        <div class="card" style="border-color:var(--filter-color);">
+            <div class="card-title text-filter">Authentication Flow</div>
+            <div class="step-flow">
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">1. JWTAuthenticationFilter intercepts <span class="tag" style="background:rgba(108,92,231,0.2);color:var(--filter-color);">POST /generate-token</span></div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Parses JSON body with ObjectMapper (not @RequestBody — we're in a filter, not controller)</div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">2. Creates <span class="text-header">UsernamePasswordAuthenticationToken</span></div>
+                    <div class="code-block" style="margin-top:8px;font-size:12px;">new UsernamePasswordAuthenticationToken("sj", "123")<br>&#10132; { principal="sj", credentials="123", <span class="text-error">authenticated=FALSE</span> }</div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">3. <span class="text-provider">authenticationManager.authenticate(token)</span></div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">ProviderManager iterates providers &#10132; DaoAuthProvider.supports()? &#10132; TRUE</div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">4. DaoAuthenticationProvider validates</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+                        a) <span class="text-service">userDetailsService.loadUserByUsername("sj")</span> &#10132; DB query<br>
+                        b) <span class="text-utility">passwordEncoder.matches("123", "$2a$10$...")</span> &#10132; BCrypt re-hash + compare<br>
+                        c) Check isEnabled, isNonLocked &#10132; all true
+                    </div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">5. Returns fully <span class="text-success">authenticated</span> token</div>
+                    <div class="code-block" style="margin-top:8px;font-size:12px;">{ principal=UserAuthEntity, credentials=<span class="text-error">null</span> <span class="text-muted">(cleared!)</span>, <span class="text-success">authenticated=TRUE</span>, authorities=[ROLE_USER] }</div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">6. Generate tokens via <span class="text-utility">JWTUtil</span></div>
+                    <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+                        <div style="flex:1;min-width:200px;padding:10px;border-radius:8px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.3);">
+                            <div style="font-size:11px;color:var(--payload-color);text-transform:uppercase;letter-spacing:1px;">Access Token</div>
+                            <div style="font-size:12px;margin-top:4px;">Expiry: 15 min</div>
+                            <div style="font-size:12px;color:var(--text-secondary);">Sent in: Response Header</div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Authorization: Bearer eyJ...</div>
+                        </div>
+                        <div style="flex:1;min-width:200px;padding:10px;border-radius:8px;background:rgba(255,165,2,0.1);border:1px solid rgba(255,165,2,0.3);">
+                            <div style="font-size:11px;color:var(--warning);text-transform:uppercase;letter-spacing:1px;">Refresh Token</div>
+                            <div style="font-size:12px;margin-top:4px;">Expiry: 7 days</div>
+                            <div style="font-size:12px;color:var(--text-secondary);">Sent in: HttpOnly Cookie</div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Set-Cookie: refreshToken=eyJ...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Token State Transformation — Step 2 -->
+        <div class="card card-glow-purple" style="border-color: var(--filter-color);">
+            <div class="card-title" style="color:var(--filter-color);">Authentication Token State Transformation</div>
+            <p style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">Watch how the Authentication object evolves through the login process</p>
+            <div class="token-transform">
+                <div class="token-state" style="background:rgba(255,71,87,0.1);border:2px solid rgba(255,71,87,0.3);">
+                    <div class="state-label" style="color:var(--error);">BEFORE — Filter Creates</div>
+                    <div class="state-body">
+                        <strong style="color:var(--header-color);">UsernamePasswordAuthToken</strong><br>
+                        principal = <span class="text-accent">"sj"</span><br>
+                        credentials = <span class="text-accent">"123"</span><br>
+                        authenticated = <span class="text-error" style="font-weight:800;">FALSE</span><br>
+                        authorities = <span class="text-muted">[]</span>
+                    </div>
+                </div>
+                <div class="transform-arrow">&#10132;</div>
+                <div class="token-state" style="background:rgba(0,255,136,0.1);border:2px solid rgba(0,255,136,0.3);">
+                    <div class="state-label" style="color:var(--success);">AFTER — Provider Returns</div>
+                    <div class="state-body">
+                        <strong style="color:var(--header-color);">UsernamePasswordAuthToken</strong><br>
+                        principal = <span class="text-accent">UserAuthEntity {sj}</span><br>
+                        credentials = <span class="text-error">null</span> <span class="text-muted">(cleared!)</span><br>
+                        authenticated = <span class="text-success" style="font-weight:800;">TRUE</span><br>
+                        authorities = <span class="text-provider">[ROLE_USER]</span>
+                    </div>
+                </div>
+            </div>
+            <div class="highlight-box bg-warning" style="border-color:var(--warning);font-size:12px;">
+                <strong>Why are credentials cleared?</strong> Security best practice — password should not linger in memory after authentication succeeds. Spring calls <code style="color:var(--warning);">eraseCredentials()</code> automatically.
+            </div>
+        </div>
+
+        <!-- Cookie flags -->
+        <div class="card">
+            <div class="card-title text-warning">HttpOnly Cookie Security Flags</div>
+            <div class="grid-4" style="font-size:13px;">
+                <div style="padding:14px;border-radius:8px;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);text-align:center;">
+                    <div style="font-weight:700;color:var(--header-color);">HttpOnly</div>
+                    <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">JS cannot read cookie.<br>Prevents XSS theft.</div>
+                </div>
+                <div style="padding:14px;border-radius:8px;background:rgba(0,184,148,0.1);border:1px solid rgba(0,184,148,0.3);text-align:center;">
+                    <div style="font-weight:700;color:var(--provider-color);">Secure</div>
+                    <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">HTTPS only.<br>No plaintext interception.</div>
+                </div>
+                <div style="padding:14px;border-radius:8px;background:rgba(88,166,255,0.1);border:1px solid rgba(88,166,255,0.3);text-align:center;">
+                    <div style="font-weight:700;color:var(--accent-blue);">Path</div>
+                    <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">/refresh-token only.<br>Not sent on other requests.</div>
+                </div>
+                <div style="padding:14px;border-radius:8px;background:rgba(255,230,109,0.1);border:1px solid rgba(255,230,109,0.3);text-align:center;">
+                    <div style="font-weight:700;color:var(--signature-color);">MaxAge</div>
+                    <div style="font-size:11px;color:var(--text-secondary);margin-top:4px;">604800 sec (7 days).<br>Auto-deleted after expiry.</div>
+                </div>
+            </div>
+        </div>
+        <!-- Step 2 Detailed Flow Diagram -->
+        <div class="card card-glow-purple" style="border-color:var(--filter-color);">
+            <div class="card-title" style="font-size:16px;color:var(--filter-color);">Complete Login Flow — Detailed Diagram</div>
+            <div class="diagram-block">  <span class="d-accent d-bold">POST /generate-token</span>
+  { "username": "sj", "password": "123" }
+  │
+  ▼
+  <span class="d-filter d-bold">┌──── FILTER 1: JWTAuthenticationFilter ───────────────────────────────┐</span>
+  <span class="d-filter">│</span>                                                                       <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  URL == "/generate-token"? → <span class="d-success d-bold">YES ★</span> (handle it)                       <span class="d-filter">│</span>
+  <span class="d-filter">│</span>                                                                       <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-muted">┌─── A: Parse Request Body ──────────────────────────────────┐</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-muted">│</span>  ObjectMapper.readValue(inputStream, LoginRequest.class)    <span class="d-muted">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-muted">│</span>  → LoginRequest { username="sj", password="123" }          <span class="d-muted">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-muted">└────────────────────────────────────────────────────────────┘</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>       │                                                               <span class="d-filter">│</span>
+  <span class="d-filter">│</span>       ▼                                                               <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-header">┌─── B: Create Auth Token ───────────────────────────────────┐</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-header">│</span>  new <span class="d-header d-bold">UsernamePasswordAuthenticationToken</span>("sj", "123")       <span class="d-header">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-header">│</span>  { principal="sj", credentials="123", <span class="d-error">authenticated=FALSE</span> } <span class="d-header">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-header">└────────────────────────────────────────────────────────────┘</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>       │                                                               <span class="d-filter">│</span>
+  <span class="d-filter">│</span>       ▼                                                               <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">┌─── C: authenticationManager.authenticate(authToken) ─────────┐</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>                                                               <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  <span class="d-accent d-bold">ProviderManager</span>                                              <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  ├─ DaoAuthProvider.supports(UsernamePasswordToken)?        <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  → <span class="d-success d-bold">TRUE ★</span>                                                <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │       │                                                  <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │       ▼                                                  <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">┌─────────────────────────────────────────────────┐</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│  <span class="d-bold">DaoAuthenticationProvider.authenticate()</span></span>        <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>                                                  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>  1. <span class="d-service">userDetailsService.loadUserByUsername("sj")</span>  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>     → repository.findByUsername("sj")              <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>     → <span class="d-warn">SELECT * FROM user_auth WHERE username='sj'</span>  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>     → UserAuthEntity { sj, $2a$10$..., ROLE_USER } <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>                                                  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>  2. <span class="d-utility">passwordEncoder.matches("123", "$2a$10$...")</span>  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>     → extract salt → BCrypt("123"+salt) == stored? <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>     → <span class="d-success d-bold">MATCH ✓</span>                                    <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>                                                  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>  3. Check: isEnabled, isNonLocked → all <span class="d-success">✓</span>       <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>                                                  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>  4. Return: UsernamePasswordAuthenticationToken  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>     { principal=UserAuthEntity,                  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>       credentials=<span class="d-error">null</span> <span class="d-muted">← CLEARED</span>                 <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>       <span class="d-success">authenticated=TRUE</span>,                        <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">│</span>       authorities=[ROLE_USER] }                  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">│</span>  │  <span class="d-provider">└─────────────────────────────────────────────────┘</span>     <span class="d-provider">│</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-provider">└───────────────────────────────────────────────────────────────┘</span>    <span class="d-filter">│</span>
+  <span class="d-filter">│</span>       │                                                               <span class="d-filter">│</span>
+  <span class="d-filter">│</span>       ▼                                                               <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">┌─── D: authResult.isAuthenticated() → TRUE ─────────────────┐</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>                                                             <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  <span class="d-payload d-bold">ACCESS TOKEN:</span>                                              <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  <span class="d-utility">jwtUtil.generateToken("sj", 15)</span>                            <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  ┌──────────────────────────────────────────────────┐       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │  Jwts.builder()                                  │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │    .setSubject("sj")                             │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │    .setIssuedAt(now)                             │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │    .setExpiration(now + 15min)                    │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │    .signWith(key, HS256) ← <span class="d-sig">HMAC signature</span>        │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │    .compact()                                    │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │  → "<span class="d-header">eyJ</span>.<span class="d-payload">eyJ</span>.<span class="d-sig">Wz</span>"                                   │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  └──────────────────────────────────────────────────┘       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  response.setHeader("Authorization", "Bearer " + token)    <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>                                                             <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  <span class="d-warn d-bold">REFRESH TOKEN:</span>                                             <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  <span class="d-utility">jwtUtil.generateToken("sj", 7 * 24 * 60)</span>                  <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  Cookie refreshCookie = new Cookie("refreshToken", token)   <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  ┌──────────────────────────────────────────────────┐       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │  .setHttpOnly(true)   ← <span class="d-error">JS cannot read</span>           │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │  .setSecure(true)     ← <span class="d-provider">HTTPS only</span>                │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │  .setPath("/refresh-token") ← <span class="d-accent">only this endpoint</span>  │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  │  .setMaxAge(604800)   ← <span class="d-sig">7 days in seconds</span>         │       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  └──────────────────────────────────────────────────┘       <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">│</span>  response.addCookie(refreshCookie)                          <span class="d-success">│</span>      <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  <span class="d-success">└─────────────────────────────────────────────────────────────┘</span>      <span class="d-filter">│</span>
+  <span class="d-filter d-bold">└──────────────────────────────────────────────────────────────────────┘</span>
+       │
+       ▼
+  <span class="d-accent">┌──────────────────────────────────────────────────────────────────────┐</span>
+  <span class="d-accent">│  RESPONSE TO CLIENT:</span>                                                  <span class="d-accent">│</span>
+  <span class="d-accent">│</span>                                                                       <span class="d-accent">│</span>
+  <span class="d-accent">│</span>  HTTP <span class="d-success d-bold">200 OK</span>                                                          <span class="d-accent">│</span>
+  <span class="d-accent">│</span>  Headers:  Authorization: Bearer <span class="d-payload">eyJ...(ACCESS TOKEN, 15min)</span>           <span class="d-accent">│</span>
+  <span class="d-accent">│</span>  Cookies:  Set-Cookie: refreshToken=<span class="d-warn">eyJ...(REFRESH TOKEN, 7days)</span>;      <span class="d-accent">│</span>
+  <span class="d-accent">│</span>                        HttpOnly; Secure; Path=/refresh-token          <span class="d-accent">│</span>
+  <span class="d-accent">│</span>                                                                       <span class="d-accent">│</span>
+  <span class="d-accent">│</span>  Client stores access token in memory/localStorage                    <span class="d-accent">│</span>
+  <span class="d-accent">│</span>  Browser auto-manages refresh cookie <span class="d-muted">(invisible to JS)</span>               <span class="d-accent">│</span>
+  <span class="d-accent">└──────────────────────────────────────────────────────────────────────┘</span></div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== PAGE 5: STEP 3 — VALIDATION ==================== -->
+<section class="page" id="step3">
+    <div class="page-inner fade-in">
+        <span class="page-number" style="background:linear-gradient(135deg, var(--provider-color), #00cec9);">Step 3</span>
+        <h1 class="page-title">JWT Validation (Every API Call)</h1>
+        <p class="page-subtitle">GET /api/* with Authorization: Bearer &lt;token&gt; — JwtValidationFilter extracts, validates, and sets SecurityContext.</p>
+
+        <div class="card" style="border-color:var(--provider-color);">
+            <div class="card-title text-provider">Validation Flow</div>
+            <div class="step-flow">
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">1. <span class="text-filter">JwtValidationFilter</span> extracts token from header</div>
+                    <div class="code-block" style="margin-top:8px;font-size:12px;">
+                        request.getHeader("Authorization")<br>
+                        &#10132; "Bearer eyJhbGciOi..."<br>
+                        &#10132; substring(7) &#10132; "eyJhbGciOi..." <span class="text-muted">(remove "Bearer " prefix)</span>
+                    </div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">2. Creates <span class="text-payload">JwtAuthenticationToken</span></div>
+                    <div class="code-block" style="margin-top:8px;font-size:12px;">
+                        new JwtAuthenticationToken("eyJhbGci...")<br>
+                        &#10132; { token="eyJ...", <span class="text-error">authenticated=FALSE</span>, principal=<span class="text-muted">null</span> }
+                    </div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">3. <span class="text-provider">ProviderManager</span> routes to JWTAuthenticationProvider</div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">DaoAuthProvider.supports(JwtAuthToken)? &#10132; FALSE (skip)<br>JWTAuthProvider.supports(JwtAuthToken)? &#10132; TRUE &#9733;</div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">4. <span class="text-utility">JWTUtil.validateAndExtractUsername(token)</span></div>
+                    <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+                        <div style="flex:1;min-width:140px;padding:8px 12px;border-radius:6px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);font-size:12px;text-align:center;">
+                            <div style="font-weight:700;color:var(--header-color);">Verify Signature</div>
+                            <div style="color:var(--text-secondary);margin-top:2px;">HMAC(h.p, key) == sig?</div>
+                            <div class="text-success" style="margin-top:2px;">&#10003; MATCH</div>
+                        </div>
+                        <div style="flex:1;min-width:140px;padding:8px 12px;border-radius:6px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.3);font-size:12px;text-align:center;">
+                            <div style="font-weight:700;color:var(--payload-color);">Check Expiry</div>
+                            <div style="color:var(--text-secondary);margin-top:2px;">exp &gt; now?</div>
+                            <div class="text-success" style="margin-top:2px;">&#10003; NOT EXPIRED</div>
+                        </div>
+                        <div style="flex:1;min-width:140px;padding:8px 12px;border-radius:6px;background:rgba(255,230,109,0.1);border:1px solid rgba(255,230,109,0.3);font-size:12px;text-align:center;">
+                            <div style="font-weight:700;color:var(--signature-color);">Extract Subject</div>
+                            <div style="color:var(--text-secondary);margin-top:2px;">getSubject()</div>
+                            <div class="text-success" style="margin-top:2px;">&#10132; "sj"</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">5. Load user from DB <span class="text-muted">(fresh check)</span></div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">userDetailsService.loadUserByUsername("sj") &#10132; DB query &#10132; user exists + not locked &#10003;</div>
+                    <div class="highlight-box bg-warning" style="border-color:var(--warning);font-size:11px;margin-top:8px;">
+                        <strong>Why DB check again?</strong> User might have been deleted/disabled AFTER JWT was issued. JWT proves identity, DB gives current state.
+                    </div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">6. Set <span class="text-success">SecurityContextHolder</span></div>
+                    <div class="code-block" style="margin-top:8px;font-size:12px;">
+                        SecurityContextHolder.getContext().setAuthentication(<br>
+                        &nbsp;&nbsp;new UsernamePasswordAuthenticationToken(<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;userDetails, <span class="text-muted">null</span>, [ROLE_USER]<br>
+                        &nbsp;&nbsp;) <span class="text-muted">// &#10132; authenticated=TRUE</span><br>
+                        );
+                    </div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:8px;">Now @PreAuthorize, Controllers, and downstream code can access the authenticated user via SecurityContextHolder.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Token transformation -->
+        <div class="card card-glow-green">
+            <div class="card-title">Token State Transformation</div>
+            <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+                <div style="flex:1;min-width:220px;padding:14px;border-radius:10px;background:rgba(255,71,87,0.1);border:1px solid rgba(255,71,87,0.3);">
+                    <div style="font-size:11px;color:var(--error);text-transform:uppercase;letter-spacing:1px;">Before (Filter Creates)</div>
+                    <div style="font-size:13px;margin-top:6px;">
+                        <strong>JwtAuthenticationToken</strong><br>
+                        token = "eyJhbG..."<br>
+                        principal = <span class="text-muted">null</span><br>
+                        authenticated = <span class="text-error">FALSE</span>
+                    </div>
+                </div>
+                <div style="font-size:32px;color:var(--text-muted);">&#10132;</div>
+                <div style="flex:1;min-width:220px;padding:14px;border-radius:10px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);">
+                    <div style="font-size:11px;color:var(--success);text-transform:uppercase;letter-spacing:1px;">After (Provider Returns)</div>
+                    <div style="font-size:13px;margin-top:6px;">
+                        <strong>UsernamePasswordAuthToken</strong><br>
+                        principal = UserAuthEntity {sj}<br>
+                        authorities = [ROLE_USER]<br>
+                        authenticated = <span class="text-success">TRUE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Step 3 Detailed Flow Diagram -->
+        <div class="card card-glow-green" style="border-color:var(--provider-color);">
+            <div class="card-title" style="font-size:16px;color:var(--provider-color);">Complete Validation Flow — Detailed Diagram</div>
+            <div class="diagram-block">  <span class="d-accent d-bold">GET /api/users</span>
+  Authorization: Bearer <span class="d-payload">eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaiI...</span>
+  │
+  ▼
+  <span class="d-filter">┌──── FILTER 1: JWTAuthenticationFilter ───────────────────────────────┐</span>
+  <span class="d-filter">│</span>  URL = "/api/users" ≠ "/generate-token" → filterChain.doFilter()     <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  → <span class="d-muted">PASS THROUGH</span>                                                      <span class="d-filter">│</span>
+  <span class="d-filter">└──────────────────────────────────────────────────────────────────────┘</span>
+       │
+       ▼
+  <span class="d-filter d-bold">┌──── FILTER 2: JwtValidationFilter ──────────────────────────────────┐</span>
+  <span class="d-filter d-bold">│</span>                                                                       <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-accent">┌─── A: Extract JWT from Header ─────────────────────────────┐</span>      <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-accent">│</span>  request.getHeader("Authorization")                         <span class="d-accent">│</span>      <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-accent">│</span>  → "Bearer <span class="d-payload">eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzaiI...</span>"          <span class="d-accent">│</span>      <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-accent">│</span>  startsWith("Bearer ")? → YES                               <span class="d-accent">│</span>      <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-accent">│</span>  substring(7) → "<span class="d-payload">eyJhbGciOiJIUzI1NiJ9.eyJzdWI...</span>"            <span class="d-accent">│</span>      <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-accent">└─────────────────────────────────────────────────────────────┘</span>      <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>       │                                                               <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>       ▼                                                               <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-payload">┌─── B: Create JwtAuthenticationToken ────────────────────────┐</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-payload">│</span>  new <span class="d-payload d-bold">JwtAuthenticationToken</span>("eyJhbGci...")                   <span class="d-payload">│</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-payload">│</span>  { token="eyJ...", <span class="d-error">authenticated=FALSE</span>, principal=null }    <span class="d-payload">│</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-payload">└─────────────────────────────────────────────────────────────┘</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>       │                                                               <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>       ▼                                                               <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">┌─── C: authenticationManager.authenticate(jwtToken) ─────────┐</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  ProviderManager                                              <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  ├─ DaoAuthProvider.supports(JwtAuthToken)? → <span class="d-error">FALSE (skip)</span>   <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  └─ JWTAuthProvider.supports(JwtAuthToken)? → <span class="d-success d-bold">TRUE ★</span>        <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>       │                                                       <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>       ▼                                                       <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">┌─── JWTAuthenticationProvider.authenticate() ────────┐</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>                                                      <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>  1. getToken() → "eyJhbGci..."                       <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>                                                      <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>  2. <span class="d-utility d-bold">jwtUtil.validateAndExtractUsername(token)</span>         <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     ┌──────────────────────────────────────────┐     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │  Jwts.parser()                           │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │    .setSigningKey(key)                    │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │    .build().parseClaimsJws(token)         │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │       │                                  │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │       ├─ Split: <span class="d-header">header</span>.<span class="d-payload">payload</span>.<span class="d-sig">signature</span> │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │       ├─ Recalculate:                    │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │       │  <span class="d-sig">HMAC(header.payload, key)</span>       │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │       ├─ Compare: calculated == received?│     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │       │  → <span class="d-success d-bold">MATCH ✓</span> (not tampered)        │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │       ├─ Check: exp > now?               │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │       │  → <span class="d-success d-bold">YES ✓</span> (not expired)           │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │       └─ Return: Claims object           │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     │  .getBody().getSubject() → <span class="d-accent d-bold">"sj"</span>          │     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     └──────────────────────────────────────────┘     <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>                                                      <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>  3. username != null → valid <span class="d-success">✓</span>                       <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>                                                      <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>  4. <span class="d-service">userDetailsService.loadUserByUsername("sj")</span>      <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     → DB: <span class="d-warn">SELECT * FROM user_auth WHERE username='sj'</span><span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     → UserAuthEntity { sj, ROLE_USER }               <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>                                                      <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>  5. Return: UsernamePasswordAuthenticationToken      <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>     { principal=UserAuthEntity,                      <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">│</span>       <span class="d-success">authenticated=TRUE</span>, authorities=[ROLE_USER] }  <span class="d-provider">│</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider">└──────────────────────────────────────────────────────┘</span>     <span class="d-provider">│</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-provider">└───────────────────────────────────────────────────────────────┘</span>    <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>       │                                                               <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>       ▼                                                               <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-success">┌─── D: Store in SecurityContext ─────────────────────────────┐</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-success">│</span>  SecurityContextHolder.getContext().setAuthentication(result) <span class="d-success">│</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-success">│</span>                                                               <span class="d-success">│</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-success">│</span>  SecurityContext <span class="d-muted">(ThreadLocal for this request)</span>:              <span class="d-success">│</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-success">│</span>  ┌──────────────────────────────────────────┐                <span class="d-success">│</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-success">│</span>  │  principal    = <span class="d-accent">UserAuthEntity {sj}</span>      │                <span class="d-success">│</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-success">│</span>  │  authenticated = <span class="d-success d-bold">TRUE</span>                    │                <span class="d-success">│</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-success">│</span>  │  authorities  = <span class="d-provider">[ROLE_USER]</span>              │                <span class="d-success">│</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-success">│</span>  └──────────────────────────────────────────┘                <span class="d-success">│</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  <span class="d-success">└───────────────────────────────────────────────────────────────┘</span>     <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>       │                                                               <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">│</span>  filterChain.doFilter(request, response)                              <span class="d-filter d-bold">│</span>
+  <span class="d-filter d-bold">└──────────────────────────────────────────────────────────────────────┘</span>
+       │
+       ▼
+  <span class="d-muted">┌──── Authorization Check ─────────────────────────────────────────────┐</span>
+  <span class="d-muted">│</span>  anyRequest().<span class="d-warn">authenticated()</span>                                         <span class="d-muted">│</span>
+  <span class="d-muted">│</span>  SecurityContext has authentication? → <span class="d-success d-bold">YES ✓ → ALLOWED</span>               <span class="d-muted">│</span>
+  <span class="d-muted">└──────────────────────────────────────────────────────────────────────┘</span>
+       │
+       ▼
+  <span class="d-accent">┌──── DispatcherServlet → @Controller ──────────────────────────────────┐</span>
+  <span class="d-accent">│</span>  @GetMapping("/api/users")                                            <span class="d-accent">│</span>
+  <span class="d-accent">│</span>  SecurityContextHolder.getContext().getAuthentication().getName()→"sj" <span class="d-accent">│</span>
+  <span class="d-accent">└──────────────────────────────────────────────────────────────────────┘</span>
+       │
+       ▼
+  RESPONSE: <span class="d-success d-bold">200 OK</span> + [{ user data }]</div>
+        </div>
+    </div>
+</section>
+
+<!-- ==================== PAGE 6: STEP 4 — REFRESH ==================== -->
+<section class="page" id="step4">
+    <div class="page-inner fade-in">
+        <span class="page-number" style="background:linear-gradient(135deg, var(--warning), #e17055);">Step 4</span>
+        <h1 class="page-title">Token Refresh</h1>
+        <p class="page-subtitle">POST /refresh-token — Access token expired. Use the refresh cookie to get a new access token without re-login.</p>
+
+        <div class="card" style="border-color:var(--warning);">
+            <div class="card-title text-warning">Refresh Flow</div>
+            <div class="step-flow">
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">1. <span class="text-filter">JWTRefreshFilter</span> intercepts <span class="tag" style="background:rgba(255,165,2,0.2);color:var(--warning);">POST /refresh-token</span></div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Auth & Validation filters skip this request (not their URL, no Bearer header)</div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">2. Extract refresh token from <span class="text-warning">HttpOnly Cookie</span></div>
+                    <div class="code-block" style="margin-top:8px;font-size:12px;">
+                        Cookie[] cookies = request.getCookies();<br>
+                        <span class="text-muted">// Loop: find cookie named "refreshToken"</span><br>
+                        &#10132; "eyJhbGci...<span class="text-muted">(7-day JWT)</span>"<br><br>
+                        <span class="text-muted">// Browser sent cookie AUTOMATICALLY</span><br>
+                        <span class="text-muted">// because Path=/refresh-token matches the URL</span>
+                    </div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">3. Validate via <span class="text-provider">JWTAuthenticationProvider</span> <span class="text-muted">(same as Step 3)</span></div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+                        JwtAuthenticationToken &#10132; ProviderManager &#10132; JWTAuthProvider<br>
+                        Verify signature &#10003; &bull; Check 7-day expiry &#10003; &bull; Load user from DB &#10003;
+                    </div>
+                </div>
+                <div class="step-item active">
+                    <div style="font-weight:700;font-size:13px;">4. Generate <span class="text-success">NEW access token</span> (15 min)</div>
+                    <div class="code-block" style="margin-top:8px;font-size:12px;">
+                        String newToken = jwtUtil.generateToken("sj", 15);<br>
+                        response.setHeader("Authorization", "Bearer " + newToken);<br><br>
+                        <span class="text-muted">// Refresh cookie is NOT regenerated</span><br>
+                        <span class="text-muted">// Original 7-day cookie continues until expiry</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card">
+            <div class="card-title">Complete Session Timeline</div>
+            <div style="position:relative;padding:20px 0;">
+                <!-- Timeline bar -->
+                <div style="height:4px;background:linear-gradient(90deg, var(--service-color), var(--filter-color), var(--provider-color), var(--provider-color), var(--warning), var(--provider-color), var(--error));border-radius:2px;margin-bottom:24px;"></div>
+
+                <div style="display:flex;gap:0;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:130px;text-align:center;padding:8px;">
+                        <div style="font-size:20px;">&#128100;</div>
+                        <div style="font-weight:700;font-size:12px;color:var(--service-color);">Register</div>
+                        <div style="font-size:10px;color:var(--text-muted);">T=0</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">One-time</div>
+                    </div>
+                    <div style="flex:1;min-width:130px;text-align:center;padding:8px;">
+                        <div style="font-size:20px;">&#128273;</div>
+                        <div style="font-weight:700;font-size:12px;color:var(--filter-color);">Login</div>
+                        <div style="font-size:10px;color:var(--text-muted);">T=0</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Get both tokens</div>
+                    </div>
+                    <div style="flex:1;min-width:130px;text-align:center;padding:8px;">
+                        <div style="font-size:20px;">&#128640;</div>
+                        <div style="font-weight:700;font-size:12px;color:var(--provider-color);">Use APIs</div>
+                        <div style="font-size:10px;color:var(--text-muted);">T=0 to T=15m</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Bearer token</div>
+                    </div>
+                    <div style="flex:1;min-width:130px;text-align:center;padding:8px;">
+                        <div style="font-size:20px;">&#9888;&#65039;</div>
+                        <div style="font-weight:700;font-size:12px;color:var(--error);">Access Expires</div>
+                        <div style="font-size:10px;color:var(--text-muted);">T=15m</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">401 on API call</div>
+                    </div>
+                    <div style="flex:1;min-width:130px;text-align:center;padding:8px;">
+                        <div style="font-size:20px;">&#128260;</div>
+                        <div style="font-weight:700;font-size:12px;color:var(--warning);">Refresh</div>
+                        <div style="font-size:10px;color:var(--text-muted);">T=15m</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">New access token</div>
+                    </div>
+                    <div style="flex:1;min-width:130px;text-align:center;padding:8px;">
+                        <div style="font-size:20px;">&#128260;</div>
+                        <div style="font-weight:700;font-size:12px;color:var(--warning);">Repeat...</div>
+                        <div style="font-size:10px;color:var(--text-muted);">Every 15m</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Until day 7</div>
+                    </div>
+                    <div style="flex:1;min-width:130px;text-align:center;padding:8px;">
+                        <div style="font-size:20px;">&#128721;</div>
+                        <div style="font-weight:700;font-size:12px;color:var(--error);">Refresh Expires</div>
+                        <div style="font-size:10px;color:var(--text-muted);">T=7 days</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Must login again</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Step 4 Detailed Flow Diagram -->
+        <div class="card card-glow-yellow" style="border-color:var(--warning);">
+            <div class="card-title" style="font-size:16px;color:var(--warning);">Complete Refresh Flow — Detailed Diagram</div>
+            <div class="diagram-block">  <span class="d-error d-bold">ACCESS TOKEN EXPIRED (15 min passed)</span>
+  Client gets <span class="d-error">401</span> on API call → triggers refresh
+
+  <span class="d-accent d-bold">POST /refresh-token</span>
+  Cookie: refreshToken=<span class="d-warn">eyJhbGci...(7day token)</span>
+  <span class="d-muted">(browser auto-sends cookie because Path=/refresh-token matches)</span>
+  <span class="d-muted">(NO Authorization header — access token is expired)</span>
+  │
+  ▼
+  <span class="d-filter">┌──── FILTER 1: JWTAuthenticationFilter ───────────────────────────────┐</span>
+  <span class="d-filter">│</span>  URL = "/refresh-token" ≠ "/generate-token" → <span class="d-muted">PASS THROUGH</span>           <span class="d-filter">│</span>
+  <span class="d-filter">└──────────────────────────────────────────────────────────────────────┘</span>
+       │
+       ▼
+  <span class="d-filter">┌──── FILTER 2: JwtValidationFilter ──────────────────────────────────┐</span>
+  <span class="d-filter">│</span>  request.getHeader("Authorization") → <span class="d-error">null</span> (no access token)         <span class="d-filter">│</span>
+  <span class="d-filter">│</span>  token = null → skip → <span class="d-muted">PASS THROUGH</span>                                  <span class="d-filter">│</span>
+  <span class="d-filter">└──────────────────────────────────────────────────────────────────────┘</span>
+       │
+       ▼
+  <span class="d-warn d-bold">┌──── FILTER 3: JWTRefreshFilter ──────────────────────────────────────┐</span>
+  <span class="d-warn d-bold">│</span>                                                                       <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  URL == "/refresh-token"? → <span class="d-success d-bold">YES ★</span> (handle it)                        <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>                                                                       <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">┌─── A: Extract refresh token from COOKIE ───────────────────┐</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">│</span>                                                             <span class="d-accent">│</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">│</span>  request.getCookies()                                       <span class="d-accent">│</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">│</span>  → Cookie[] {                                               <span class="d-accent">│</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">│</span>      Cookie { name="JSESSIONID", value="..." },             <span class="d-accent">│</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">│</span>      Cookie { name=<span class="d-warn d-bold">"refreshToken"</span>,                          <span class="d-accent">│</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">│</span>               value="eyJhbGci...(7day JWT)" }  <span class="d-success">★ FOUND</span>     <span class="d-accent">│</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">│</span>    }                                                        <span class="d-accent">│</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">│</span>  for (cookie : cookies)                                     <span class="d-accent">│</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">│</span>    "refreshToken".equals(cookie.getName())? → YES           <span class="d-accent">│</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">│</span>    → return cookie.getValue()                               <span class="d-accent">│</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-accent">└─────────────────────────────────────────────────────────────┘</span>      <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>       │                                                               <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>       ▼                                                               <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">┌─── C: Validate via AuthenticationManager ─────────────────────┐</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>  new <span class="d-payload d-bold">JwtAuthenticationToken</span>(refreshToken)                     <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>  { token="eyJ...(7day)", <span class="d-error">authenticated=FALSE</span> }                <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       │                                                       <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       ▼                                                       <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-accent">ProviderManager</span>                                              <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>  ├─ DaoAuthProvider.supports(JwtAuthToken)? → <span class="d-error">FALSE (skip)</span>   <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>  └─ JWTAuthProvider.supports(JwtAuthToken)? → <span class="d-success d-bold">TRUE ★</span>        <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       │                                                       <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       ▼                                                       <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>  <span class="d-provider d-bold">JWTAuthenticationProvider.authenticate()</span>                     <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       ├── <span class="d-utility">jwtUtil.validateAndExtractUsername(token)</span>            <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       │   Verify signature → <span class="d-success">MATCH ✓</span>                            <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       │   Check expiry → <span class="d-success">7day, still valid ✓</span>                    <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       │   Extract subject → <span class="d-accent d-bold">"sj"</span>                                <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       │                                                       <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       ├── <span class="d-service">userDetailsService.loadUserByUsername("sj")</span>         <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       │   → DB: user exists, not locked/disabled <span class="d-success">✓</span>             <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       │                                                       <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>       └── Return: { principal=sj, <span class="d-success">authenticated=TRUE</span>,         <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">│</span>                    authorities=[ROLE_USER] }                <span class="d-provider">│</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-provider">└───────────────────────────────────────────────────────────────┘</span>    <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>       │                                                               <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>       ▼                                                               <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-success">┌─── D: Generate NEW access token ────────────────────────────┐</span>     <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-success">│</span>                                                               <span class="d-success">│</span>     <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-success">│</span>  <span class="d-utility">jwtUtil.generateToken("sj", 15)</span> ← <span class="d-payload">fresh 15 min token</span>       <span class="d-success">│</span>     <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-success">│</span>  → "<span class="d-payload">eyJhbGci...(BRAND NEW access token)</span>"                    <span class="d-success">│</span>     <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-success">│</span>                                                               <span class="d-success">│</span>     <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-success">│</span>  response.setHeader("Authorization", "Bearer " + newToken)   <span class="d-success">│</span>     <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-success">│</span>                                                               <span class="d-success">│</span>     <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-success">│</span>  <span class="d-muted">NOTE: Refresh cookie NOT regenerated.</span>                       <span class="d-success">│</span>     <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-success">│</span>  <span class="d-muted">Original 7-day cookie continues until it expires.</span>           <span class="d-success">│</span>     <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">│</span>  <span class="d-success">└───────────────────────────────────────────────────────────────┘</span>     <span class="d-warn d-bold">│</span>
+  <span class="d-warn d-bold">└──────────────────────────────────────────────────────────────────────┘</span>
+       │
+       ▼
+  <span class="d-accent">┌──────────────────────────────────────────────────────────────────────┐</span>
+  <span class="d-accent">│  RESPONSE TO CLIENT:</span>                                                  <span class="d-accent">│</span>
+  <span class="d-accent">│</span>                                                                       <span class="d-accent">│</span>
+  <span class="d-accent">│</span>  HTTP <span class="d-success d-bold">200 OK</span>                                                          <span class="d-accent">│</span>
+  <span class="d-accent">│</span>  Headers: Authorization: Bearer <span class="d-payload">eyJ...(NEW ACCESS TOKEN, 15min)</span>       <span class="d-accent">│</span>
+  <span class="d-accent">│</span>                                                                       <span class="d-accent">│</span>
+  <span class="d-accent">│</span>  Client extracts new access token from header                         <span class="d-accent">│</span>
+  <span class="d-accent">│</span>  Retries the original failed API call with new token                  <span class="d-accent">│</span>
+  <span class="d-accent">└──────────────────────────────────────────────────────────────────────┘</span></div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Footer -->
+<div class="footer" style="padding:50px 40px;background:linear-gradient(180deg, var(--bg-primary), rgba(22,27,34,0.8));">
+    <div style="font-size:18px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg, var(--header-color), var(--payload-color), var(--signature-color));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline-block;">JWT Authentication with Spring Security</div>
+    <p style="margin-top:4px;color:var(--text-secondary);font-size:14px;">A Complete Visual Guide for Interview Preparation</p>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <p style="color:var(--text-muted);font-size:13px;">Created by <strong style="color:var(--text-secondary);">Amaan</strong> &bull; Share freely on LinkedIn &bull; Built with Spring Security knowledge</p>
+    </div>
+</div>
+
+</body>
+</html>
